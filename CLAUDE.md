@@ -23,7 +23,11 @@ ruff check .
 
 ## Environment
 
-Requires `GOOGLE_GENERATIVE_AI_API_KEY` environment variable set with a key from https://aistudio.google.com/apikey
+Requires `GOOGLE_GENERATIVE_AI_API_KEY` - can be set via:
+- Environment variable
+- `.env` file (auto-loaded via python-dotenv)
+
+Get a key from https://aistudio.google.com/apikey
 
 ## Architecture
 

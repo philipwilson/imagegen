@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .core import ASPECT_RATIOS, generate_image
+from .core import ASPECT_RATIOS, OUTPUT_FORMATS, generate_image
 
 
 def main():
@@ -18,7 +18,9 @@ Examples:
   %(prog)s --aspect 16:9 "Mountain landscape"
   %(prog)s -f prompt.txt --model pro
   %(prog)s -i photo.jpg "Convert to watercolor painting"
-  %(prog)s -i ref1.jpg -i ref2.jpg "Combine these styles"
+  %(prog)s -n 4 "Generate four variations"
+  %(prog)s -t 1.5 "More creative output"
+  %(prog)s --format webp "Save as WebP"
         """
     )
     parser.add_argument(
@@ -51,6 +53,23 @@ Examples:
         help='Aspect ratio. Default: 1:1'
     )
     parser.add_argument(
+        '--number', '-n',
+        type=int,
+        default=1,
+        help='Number of images to generate. Default: 1'
+    )
+    parser.add_argument(
+        '--temperature', '-t',
+        type=float,
+        help='Generation temperature (0.0-2.0). Higher = more creative'
+    )
+    parser.add_argument(
+        '--format',
+        choices=OUTPUT_FORMATS,
+        default='png',
+        help='Output format. Default: png'
+    )
+    parser.add_argument(
         '--output', '-o',
         default='output',
         help='Output directory. Default: output'
@@ -79,6 +98,9 @@ Examples:
             aspect_ratio=args.aspect,
             output_dir=args.output,
             images=args.images,
+            number=args.number,
+            temperature=args.temperature,
+            output_format=args.format,
         )
 
         if saved_files:

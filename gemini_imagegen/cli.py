@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from . import __version__
 from .core import ASPECT_RATIOS, OUTPUT_FORMATS, generate_image
 
 
@@ -22,6 +23,11 @@ Examples:
   %(prog)s -t 1.5 "More creative output"
   %(prog)s --format webp "Save as WebP"
         """
+    )
+    parser.add_argument(
+        '--version', '-V',
+        action='version',
+        version=f'%(prog)s {__version__}'
     )
     parser.add_argument(
         'prompt',

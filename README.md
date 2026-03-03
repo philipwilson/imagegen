@@ -58,6 +58,7 @@ gemini-imagegen --format webp "A crystal ball"
 | Flag | Model ID | Description |
 |------|----------|-------------|
 | `--model flash` | `gemini-2.5-flash-image` | Nano Banana - fast, efficient (default) |
+| `--model flash2` | `gemini-3.1-flash-image-preview` | Nano Banana Flash 3.1 |
 | `--model pro` | `gemini-3-pro-image-preview` | Nano Banana Pro - higher quality |
 
 ## Options

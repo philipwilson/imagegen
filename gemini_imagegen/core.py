@@ -17,8 +17,9 @@ load_dotenv()
 
 
 MODELS = {
-    'flash': 'gemini-2.5-flash-image',      # Nano Banana
-    'pro': 'gemini-3-pro-image-preview',     # Nano Banana Pro
+    'flash': 'gemini-2.5-flash-image',              # Nano Banana
+    'flash2': 'gemini-3.1-flash-image-preview',     # Nano Banana Flash 3.1
+    'pro': 'gemini-3-pro-image-preview',             # Nano Banana Pro
 }
 
 ASPECT_RATIOS = ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9']

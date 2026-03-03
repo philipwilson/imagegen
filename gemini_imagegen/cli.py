@@ -48,9 +48,9 @@ Examples:
     )
     parser.add_argument(
         '--model', '-m',
-        choices=['flash', 'pro'],
+        choices=['flash', 'flash2', 'pro'],
         default='flash',
-        help='Model to use: flash (Nano Banana) or pro (Nano Banana Pro). Default: flash'
+        help='Model to use: flash (Nano Banana), flash2 (Nano Banana Flash 3.1), or pro (Nano Banana Pro). Default: flash'
     )
     parser.add_argument(
         '--aspect', '-a',

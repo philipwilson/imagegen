@@ -18,6 +18,7 @@ dependencies = [
 
 [project.scripts]
 gemini-imagegen = "gemini_imagegen.cli:main"
+gemini-imageinfo = "gemini_imagegen.info:main"
 
 [project.optional-dependencies]
 dev = [

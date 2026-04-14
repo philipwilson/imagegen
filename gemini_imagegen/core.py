@@ -84,6 +84,7 @@ def generate_image(
 
     print(f"Generating {number} image(s) with {model_id}...")
     print(f"  Prompt: {prompt[:80]}{'...' if len(prompt) > 80 else ''}")
+    print(f"  Model: {model_id}")
     print(f"  Aspect ratio: {aspect_ratio}")
     if temperature is not None:
         print(f"  Temperature: {temperature}")

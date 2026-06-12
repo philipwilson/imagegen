@@ -5,12 +5,19 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .core import ASPECT_RATIOS, OUTPUT_FORMATS, generate_image
+from .core import (
+    ASPECT_RATIOS,
+    MODELS,
+    OUTPUT_FORMATS,
+    PERSON_GENERATION_OPTIONS,
+    generate_image,
+)
 
 
 def main():
+    model_choices = list(MODELS.keys())
     parser = argparse.ArgumentParser(
-        description='Generate images using Gemini Nano Banana models',
+        description='Generate images using Gemini or Imagen models',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -22,6 +29,8 @@ Examples:
   %(prog)s -n 4 "Generate four variations"
   %(prog)s -t 1.5 "More creative output"
   %(prog)s --format webp "Save as WebP"
+  %(prog)s --model imagen "A robot on a skateboard"
+  %(prog)s --model imagen-ultra --image-size 2K "High-res landscape"
         """
     )
     parser.add_argument(
@@ -44,30 +53,30 @@ Examples:
         type=Path,
         action='append',
         dest='images',
-        help='Reference image(s) to include. Can be specified multiple times (max 14)'
+        help='Reference image(s) for editing (Gemini only, max 14)'
     )
     parser.add_argument(
         '--model', '-m',
-        choices=['flash', 'flash2', 'pro'],
+        choices=model_choices,
         default='flash',
-        help='Model to use: flash (Nano Banana), flash2 (Nano Banana Flash 3.1), or pro (Nano Banana Pro). Default: flash'
+        help='Model: flash, flash2, pro (Gemini) or imagen, imagen-fast, imagen-ultra (Imagen). Default: flash'
     )
     parser.add_argument(
         '--aspect', '-a',
         choices=ASPECT_RATIOS,
         default='1:1',
-        help='Aspect ratio. Default: 1:1'
+        help='Aspect ratio. Imagen supports: 1:1, 3:4, 4:3, 9:16, 16:9. Default: 1:1'
     )
     parser.add_argument(
         '--number', '-n',
         type=int,
         default=1,
-        help='Number of images to generate. Default: 1'
+        help='Number of images to generate (Imagen max: 4). Default: 1'
     )
     parser.add_argument(
         '--temperature', '-t',
         type=float,
-        help='Generation temperature (0.0-2.0). Higher = more creative'
+        help='Generation temperature 0.0-2.0 (Gemini only)'
     )
     parser.add_argument(
         '--format',
@@ -79,6 +88,16 @@ Examples:
         '--output', '-o',
         default='output',
         help='Output directory. Default: output'
+    )
+    parser.add_argument(
+        '--person-generation',
+        choices=PERSON_GENERATION_OPTIONS,
+        help='Person generation policy (Imagen only): dont_allow, allow_adult, allow_all'
+    )
+    parser.add_argument(
+        '--image-size',
+        choices=['1K', '2K'],
+        help='Output image size (Imagen only): 1K or 2K'
     )
 
     args = parser.parse_args()
@@ -107,6 +126,8 @@ Examples:
             number=args.number,
             temperature=args.temperature,
             output_format=args.format,
+            person_generation=args.person_generation,
+            image_size=args.image_size,
         )
 
         if saved_files:

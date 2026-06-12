@@ -16,14 +16,46 @@ from PIL.PngImagePlugin import PngInfo
 load_dotenv()
 
 
-MODELS = {
+GEMINI_MODELS = {
     'flash': 'gemini-2.5-flash-image',              # Nano Banana
     'flash2': 'gemini-3.1-flash-image-preview',     # Nano Banana Flash 3.1
     'pro': 'gemini-3-pro-image-preview',             # Nano Banana Pro
 }
 
+IMAGEN_MODELS = {
+    'imagen': 'imagen-4.0-generate-001',             # Imagen 4 Standard
+    'imagen-fast': 'imagen-4.0-fast-generate-001',   # Imagen 4 Fast
+    'imagen-ultra': 'imagen-4.0-ultra-generate-001', # Imagen 4 Ultra
+}
+
+MODELS = {**GEMINI_MODELS, **IMAGEN_MODELS}
+
 ASPECT_RATIOS = ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9']
+IMAGEN_ASPECT_RATIOS = ['1:1', '3:4', '4:3', '9:16', '16:9']
 OUTPUT_FORMATS = ['png', 'webp']
+PERSON_GENERATION_OPTIONS = ['dont_allow', 'allow_adult', 'allow_all']
+
+
+def _save_image(
+    pil_image: Image.Image,
+    filename: Path,
+    output_format: str,
+    prompt: str,
+    model_id: str,
+    aspect_ratio: str,
+    temperature: float | None = None,
+) -> None:
+    """Save a PIL image with optional PNG metadata."""
+    if output_format == 'png':
+        metadata = PngInfo()
+        metadata.add_text("prompt", prompt)
+        metadata.add_text("model", model_id)
+        metadata.add_text("aspect_ratio", aspect_ratio)
+        if temperature is not None:
+            metadata.add_text("temperature", str(temperature))
+        pil_image.save(filename, pnginfo=metadata)
+    else:
+        pil_image.save(filename, format='WEBP')
 
 
 def _create_client() -> genai.Client:
@@ -79,19 +111,23 @@ def generate_image(
     number: int = 1,
     temperature: float | None = None,
     output_format: str = 'png',
+    person_generation: str | None = None,
+    image_size: str | None = None,
 ) -> list[Path]:
     """
-    Generate images from a text prompt using Gemini.
+    Generate images from a text prompt using Gemini or Imagen.
 
     Args:
         prompt: Text description of the image to generate
-        model: 'flash' (Nano Banana) or 'pro' (Nano Banana Pro)
+        model: Model alias (e.g., 'flash', 'pro', 'imagen', 'imagen-ultra')
         aspect_ratio: Image aspect ratio (e.g., '1:1', '16:9')
         output_dir: Directory to save generated images
-        images: Optional list of reference image paths (up to 14)
+        images: Optional list of reference image paths (up to 14, Gemini only)
         number: Number of images to generate (default: 1)
-        temperature: Generation temperature 0.0-2.0 (default: model default)
+        temperature: Generation temperature 0.0-2.0 (Gemini only)
         output_format: Output format 'png' or 'webp' (default: 'png')
+        person_generation: Person generation policy (Imagen only)
+        image_size: Output image size '1K' or '2K' (Imagen only)
 
     Returns:
         List of paths to saved images
@@ -102,8 +138,7 @@ def generate_image(
     if not model_id:
         raise ValueError(f"Unknown model '{model}'. Choose from: {list(MODELS.keys())}")
 
-    if aspect_ratio not in ASPECT_RATIOS:
-        raise ValueError(f"Invalid aspect ratio. Choose from: {ASPECT_RATIOS}")
+    is_imagen = model in IMAGEN_MODELS
 
     if output_format not in OUTPUT_FORMATS:
         raise ValueError(f"Invalid output format. Choose from: {OUTPUT_FORMATS}")
@@ -111,20 +146,84 @@ def generate_image(
     if number < 1:
         raise ValueError("Number of images must be at least 1")
 
-    if temperature is not None and (temperature < 0.0 or temperature > 2.0):
-        raise ValueError("Temperature must be between 0.0 and 2.0")
+    # Validate aspect ratio against model-specific options
+    if is_imagen:
+        if aspect_ratio not in IMAGEN_ASPECT_RATIOS:
+            raise ValueError(f"Invalid aspect ratio for Imagen. Choose from: {IMAGEN_ASPECT_RATIOS}")
+    else:
+        if aspect_ratio not in ASPECT_RATIOS:
+            raise ValueError(f"Invalid aspect ratio. Choose from: {ASPECT_RATIOS}")
+
+    # Validate model-specific options
+    if is_imagen:
+        if images:
+            raise ValueError("Reference images are not supported with Imagen models")
+        if temperature is not None:
+            raise ValueError("Temperature is not supported with Imagen models")
+        if number > 4:
+            raise ValueError("Imagen supports a maximum of 4 images per request")
+        if person_generation and person_generation not in PERSON_GENERATION_OPTIONS:
+            raise ValueError(f"Invalid person_generation. Choose from: {PERSON_GENERATION_OPTIONS}")
+        if image_size and image_size not in ('1K', '2K'):
+            raise ValueError("Invalid image_size. Choose from: 1K, 2K")
+    else:
+        if person_generation is not None:
+            raise ValueError("--person-generation is only supported with Imagen models")
+        if image_size is not None:
+            raise ValueError("--image-size is only supported with Imagen models")
+        if temperature is not None and (temperature < 0.0 or temperature > 2.0):
+            raise ValueError("Temperature must be between 0.0 and 2.0")
 
     # Create output directory
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    print(f"Generating {number} image(s) with {model_id}...")
+    print(f"Generating {number} image(s)...")
     print(f"  Prompt: {prompt[:80]}{'...' if len(prompt) > 80 else ''}")
     print(f"  Model: {model_id}")
     print(f"  Aspect ratio: {aspect_ratio}")
     if temperature is not None:
         print(f"  Temperature: {temperature}")
+    if image_size:
+        print(f"  Image size: {image_size}")
+    if person_generation:
+        print(f"  Person generation: {person_generation}")
 
+    saved_files = []
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    if is_imagen:
+        saved_files = _generate_imagen(
+            client, model_id, prompt, number, aspect_ratio,
+            person_generation, image_size, output_format,
+            output_path, timestamp,
+        )
+    else:
+        saved_files = _generate_gemini(
+            client, model_id, prompt, number, aspect_ratio,
+            temperature, output_format, images,
+            output_path, timestamp,
+        )
+
+    if not saved_files:
+        print("No images were generated. The model may have declined the request.")
+
+    return saved_files
+
+
+def _generate_gemini(
+    client: genai.Client,
+    model_id: str,
+    prompt: str,
+    number: int,
+    aspect_ratio: str,
+    temperature: float | None,
+    output_format: str,
+    images: list[Path] | None,
+    output_path: Path,
+    timestamp: str,
+) -> list[Path]:
+    """Generate images using Gemini models."""
     # Build contents list with prompt and optional reference images
     contents: list = [prompt]
     if images:
@@ -146,9 +245,7 @@ def generate_image(
     if temperature is not None:
         gen_config.temperature = temperature
 
-    # Generate images
     saved_files = []
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     image_count = 0
 
     for i in range(number):
@@ -168,30 +265,57 @@ def generate_image(
                 gemini_image = part.as_image()
                 image_count += 1
 
-                # Convert Gemini Image to PIL Image
                 pil_image = Image.open(io.BytesIO(gemini_image.image_bytes))
-
-                # Determine extension and save
                 ext = output_format
                 filename = output_path / f"gemini_{timestamp}_{image_count}.{ext}"
 
-                if output_format == 'png':
-                    # Add prompt metadata to PNG
-                    metadata = PngInfo()
-                    metadata.add_text("prompt", prompt)
-                    metadata.add_text("model", model_id)
-                    metadata.add_text("aspect_ratio", aspect_ratio)
-                    if temperature is not None:
-                        metadata.add_text("temperature", str(temperature))
-                    pil_image.save(filename, pnginfo=metadata)
-                else:
-                    # WEBP format
-                    pil_image.save(filename, format='WEBP')
-
+                _save_image(pil_image, filename, output_format, prompt,
+                            model_id, aspect_ratio, temperature)
                 saved_files.append(filename)
                 print(f"  Saved: {filename}")
 
-    if not saved_files:
-        print("No images were generated. The model may have declined the request.")
+    return saved_files
+
+
+def _generate_imagen(
+    client: genai.Client,
+    model_id: str,
+    prompt: str,
+    number: int,
+    aspect_ratio: str,
+    person_generation: str | None,
+    image_size: str | None,
+    output_format: str,
+    output_path: Path,
+    timestamp: str,
+) -> list[Path]:
+    """Generate images using Imagen models."""
+    config = types.GenerateImagesConfig(
+        numberOfImages=number,
+        aspectRatio=aspect_ratio,
+        outputMimeType=f"image/{output_format}",
+    )
+    if person_generation:
+        config.personGeneration = person_generation
+    if image_size:
+        config.imageSize = image_size
+
+    response = client.models.generate_images(
+        model=model_id,
+        prompt=prompt,
+        config=config,
+    )
+
+    saved_files = []
+    if response.generated_images:
+        for i, generated_image in enumerate(response.generated_images, 1):
+            pil_image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+            ext = output_format
+            filename = output_path / f"imagen_{timestamp}_{i}.{ext}"
+
+            _save_image(pil_image, filename, output_format, prompt,
+                        model_id, aspect_ratio)
+            saved_files.append(filename)
+            print(f"  Saved: {filename}")
 
     return saved_files

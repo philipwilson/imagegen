@@ -35,15 +35,23 @@ Set `GOOGLE_GENAI_USE_VERTEXAI=true` to force ADC/Vertex even when an API key is
 
 ## Architecture
 
-This is a CLI tool for generating images using Google's Gemini API (Nano Banana models).
+This is a CLI tool for generating images using Google's Gemini API and Imagen API, via the `google-genai` SDK.
 
-- `gemini_imagegen/core.py` - Core `generate_image()` function that handles Gemini API calls, uses `google-genai` SDK
+- `gemini_imagegen/core.py` - Core `generate_image()` function with two code paths: `_generate_gemini()` (uses `generate_content`) and `_generate_imagen()` (uses `generate_images`)
 - `gemini_imagegen/cli.py` - Argument parsing and CLI entry point (`gemini-imagegen` command)
+- `gemini_imagegen/info.py` - Utility CLI (`gemini-imageinfo`) for reading PNG metadata
 - `gemini_imagegen/__init__.py` - Package exports, exposes `generate_image` and `__version__`
 
-The API supports text-to-image and image editing (passing reference images via the `images` parameter, up to 14 images).
+Gemini models support text-to-image and image editing (reference images, up to 14). Imagen models support text-to-image only but offer native multi-image generation (up to 4) and configurable output size.
 
 ## Models
 
+### Gemini
 - `flash` → `gemini-2.5-flash-image` (Nano Banana) - default, fast
+- `flash2` → `gemini-3.1-flash-image-preview` (Nano Banana Flash 3.1)
 - `pro` → `gemini-3-pro-image-preview` (Nano Banana Pro) - higher quality
+
+### Imagen 4
+- `imagen` → `imagen-4.0-generate-001` (Standard)
+- `imagen-fast` → `imagen-4.0-fast-generate-001` (Fast)
+- `imagen-ultra` → `imagen-4.0-ultra-generate-001` (Ultra)

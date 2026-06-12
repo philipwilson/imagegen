@@ -10,6 +10,11 @@ pip install -e .
 
 ## Setup
 
+Authenticate with either an API key or Google Cloud Application Default
+Credentials. An API key takes precedence if both are available.
+
+### Option 1: API key
+
 Get an API key from https://aistudio.google.com/apikey
 
 Set it via environment variable:
@@ -21,6 +26,18 @@ Or create a `.env` file in your project directory:
 ```
 GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 ```
+
+### Option 2: Application Default Credentials (Vertex AI)
+
+Requires a Google Cloud project with the Vertex AI API enabled.
+
+```bash
+gcloud auth application-default login
+export GOOGLE_CLOUD_PROJECT="your-project-id"   # optional if ADC has a default project
+export GOOGLE_CLOUD_LOCATION="global"           # optional, defaults to global
+```
+
+To use ADC even when an API key is set, set `GOOGLE_GENAI_USE_VERTEXAI=true`.
 
 ## Usage
 

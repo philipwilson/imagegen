@@ -23,11 +23,15 @@ ruff check .
 
 ## Environment
 
-Requires `GOOGLE_GENERATIVE_AI_API_KEY` - can be set via:
-- Environment variable
-- `.env` file (auto-loaded via python-dotenv)
+Authentication, in order of precedence (see `_create_client()` in `core.py`):
+1. `GOOGLE_GENERATIVE_AI_API_KEY` - environment variable or `.env` file
+   (auto-loaded via python-dotenv). Get a key from https://aistudio.google.com/apikey
+2. Application Default Credentials via the Vertex AI backend
+   (`gcloud auth application-default login`). Uses `GOOGLE_CLOUD_PROJECT`
+   (falls back to the ADC default project) and `GOOGLE_CLOUD_LOCATION`
+   (defaults to `global`).
 
-Get a key from https://aistudio.google.com/apikey
+Set `GOOGLE_GENAI_USE_VERTEXAI=true` to force ADC/Vertex even when an API key is set.
 
 ## Architecture
 

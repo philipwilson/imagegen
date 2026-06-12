@@ -26,6 +26,50 @@ ASPECT_RATIOS = ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9'
 OUTPUT_FORMATS = ['png', 'webp']
 
 
+def _create_client() -> genai.Client:
+    """
+    Create a Gemini client using the first available auth method:
+
+    1. API key from GOOGLE_GENERATIVE_AI_API_KEY (Gemini Developer API),
+       unless GOOGLE_GENAI_USE_VERTEXAI is set to force Vertex AI.
+    2. Application Default Credentials via the Vertex AI backend
+       (set up with `gcloud auth application-default login`).
+    """
+    use_vertex = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', '').lower() in ('true', '1', 'yes')
+    api_key = os.environ.get('GOOGLE_GENERATIVE_AI_API_KEY')
+
+    if api_key and not use_vertex:
+        return genai.Client(api_key=api_key)
+
+    project = os.environ.get('GOOGLE_CLOUD_PROJECT')
+    location = os.environ.get('GOOGLE_CLOUD_LOCATION', 'global')
+
+    try:
+        import google.auth
+        import google.auth.exceptions
+
+        credentials, adc_project = google.auth.default()
+    except google.auth.exceptions.DefaultCredentialsError:
+        raise ValueError(
+            "No credentials found. Either set GOOGLE_GENERATIVE_AI_API_KEY "
+            "(get a key at https://aistudio.google.com/apikey) or run "
+            "`gcloud auth application-default login` to use Application "
+            "Default Credentials."
+        )
+
+    project = project or adc_project
+    if not project:
+        raise ValueError(
+            "Application Default Credentials found, but no project is set. "
+            "Set GOOGLE_CLOUD_PROJECT or run "
+            "`gcloud auth application-default set-quota-project PROJECT_ID`."
+        )
+
+    return genai.Client(
+        vertexai=True, project=project, location=location, credentials=credentials
+    )
+
+
 def generate_image(
     prompt: str,
     model: str = 'flash',
@@ -52,12 +96,7 @@ def generate_image(
     Returns:
         List of paths to saved images
     """
-    api_key = os.environ.get('GOOGLE_GENERATIVE_AI_API_KEY')
-    if not api_key:
-        raise ValueError(
-            "GOOGLE_GENERATIVE_AI_API_KEY environment variable not set. "
-            "Get a key at https://aistudio.google.com/apikey"
-        )
+    client = _create_client()
 
     model_id = MODELS.get(model)
     if not model_id:
@@ -78,9 +117,6 @@ def generate_image(
     # Create output directory
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-
-    # Initialize client
-    client = genai.Client(api_key=api_key)
 
     print(f"Generating {number} image(s) with {model_id}...")
     print(f"  Prompt: {prompt[:80]}{'...' if len(prompt) > 80 else ''}")

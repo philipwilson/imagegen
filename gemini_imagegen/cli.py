@@ -59,7 +59,7 @@ Examples:
         '--model', '-m',
         choices=model_choices,
         default='flash',
-        help='Model: flash, flash2, pro (Gemini) or imagen, imagen-fast, imagen-ultra (Imagen). Default: flash'
+        help='Model: flash, flash2, flash-lite, pro (Gemini) or imagen, imagen-fast, imagen-ultra (Imagen). Default: flash'
     )
     parser.add_argument(
         '--aspect', '-a',

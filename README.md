@@ -87,6 +87,7 @@ gemini-imagegen --model imagen --person-generation dont_allow "A park scene"
 |------|----------|-------------|
 | `--model flash` | `gemini-2.5-flash-image` | Nano Banana - fast, efficient (default) |
 | `--model flash2` | `gemini-3.1-flash-image-preview` | Nano Banana Flash 3.1 |
+| `--model flash-lite` | `gemini-3.1-flash-lite-image` | Nano Banana Flash Lite 3.1 |
 | `--model pro` | `gemini-3-pro-image-preview` | Nano Banana Pro - higher quality |
 
 ### Imagen 4 (text-to-image only)

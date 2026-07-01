@@ -19,6 +19,7 @@ load_dotenv()
 GEMINI_MODELS = {
     'flash': 'gemini-2.5-flash-image',              # Nano Banana
     'flash2': 'gemini-3.1-flash-image-preview',     # Nano Banana Flash 3.1
+    'flash-lite': 'gemini-3.1-flash-lite-image',     # Nano Banana Flash Lite 3.1
     'pro': 'gemini-3-pro-image-preview',             # Nano Banana Pro
 }
 

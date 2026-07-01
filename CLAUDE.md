@@ -49,6 +49,7 @@ Gemini models support text-to-image and image editing (reference images, up to 1
 ### Gemini
 - `flash` → `gemini-2.5-flash-image` (Nano Banana) - default, fast
 - `flash2` → `gemini-3.1-flash-image-preview` (Nano Banana Flash 3.1)
+- `flash-lite` → `gemini-3.1-flash-lite-image` (Nano Banana Flash Lite 3.1)
 - `pro` → `gemini-3-pro-image-preview` (Nano Banana Pro) - higher quality
 
 ### Imagen 4

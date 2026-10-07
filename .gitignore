@@ -12,9 +12,8 @@ env/
 # Output images
 output/
 
-# Test files
-test_prompt.txt
-catpromot.txt
+# Working/scratch files
+archive/
 
 # IDE
 .idea/

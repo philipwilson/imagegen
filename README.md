@@ -85,11 +85,13 @@ All models support text-to-image and image editing with reference images.
 
 | Flag | Model ID | Description |
 |------|----------|-------------|
-| `--model flash` | `gemini-2.5-flash-image` | Nano Banana - original model, scheduled for shutdown by Google on March 15, 2027 |
-| `--model flash2` | `gemini-3.1-flash-image` | Nano Banana 2 |
+| `--model flash` | `gemini-2.5-flash-image` | Nano Banana - original model. **Deprecated**: Google shutdown March 15, 2027 |
+| `--model flash2` | `gemini-3.1-flash-image` | Nano Banana 2. **Deprecated** by Google on October 6, 2026, no shutdown date announced yet; migrate to `nb21` |
 | `--model flash-lite` | `gemini-3.1-flash-lite-image` | Nano Banana 2 Lite |
 | `--model pro` | `gemini-3-pro-image` | Nano Banana Pro - higher quality |
 | `--model nb21` | `gemini-nano-banana-2.1` | Nano Banana 2.1 - latest, flash-speed with improved quality, text rendering and up to 4K output (default) |
+
+Using a deprecated model prints a warning to stderr but still works until Google's shutdown date.
 
 Imagen 4 support was removed in October 2026: Google discontinued the Imagen 4
 models on Vertex AI (June 30, 2026) and the Gemini API (August 17, 2026) and

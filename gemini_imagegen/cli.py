@@ -18,8 +18,11 @@ from .core import (
 
 
 def _model_help() -> str:
-    lines = ', '.join(f"{alias} ({spec.description})" for alias, spec in MODEL_SPECS.items())
-    return f"Model: {lines}. Default: {DEFAULT_MODEL}"
+    parts = []
+    for alias, spec in MODEL_SPECS.items():
+        note = f"; DEPRECATED: {spec.deprecated}" if spec.deprecated else ''
+        parts.append(f"{alias} ({spec.description}{note})")
+    return f"Model: {', '.join(parts)}. Default: {DEFAULT_MODEL}"
 
 
 def main():

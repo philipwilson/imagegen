@@ -2,6 +2,7 @@
 
 import io
 import os
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -39,12 +40,14 @@ class ModelSpec:
     image_sizes: tuple[str, ...] = ()     # empty: --image-size not accepted
     max_reference_images: int = MAX_REFERENCE_IMAGES   # 0: reference images not accepted
     supports_temperature: bool = True
+    deprecated: str | None = None         # Google deprecation note; shown in help and warned at runtime
 
 
 def _gemini3(
     model_id: str,
     description: str,
     aspect_ratios: tuple[str, ...] = GEMINI3_ASPECT_RATIOS,
+    deprecated: str | None = None,
 ) -> ModelSpec:
     """Shared capabilities of the Gemini 3 image family."""
     return ModelSpec(
@@ -52,6 +55,7 @@ def _gemini3(
         description=description,
         aspect_ratios=aspect_ratios,
         image_sizes=('1K', '2K', '4K'),
+        deprecated=deprecated,
     )
 
 
@@ -59,10 +63,12 @@ MODEL_SPECS: dict[str, ModelSpec] = {
     # The original Nano Banana: no --image-size and no panoramic ratios.
     'flash': ModelSpec(
         model_id='gemini-2.5-flash-image',
-        description='Nano Banana - fast, efficient',
+        description='Nano Banana - original model',
         aspect_ratios=GEMINI_ASPECT_RATIOS,
+        deprecated='shutdown 2027-03-15, use flash-lite or nb21',
     ),
-    'flash2': _gemini3('gemini-3.1-flash-image', 'Nano Banana 2'),
+    'flash2': _gemini3('gemini-3.1-flash-image', 'Nano Banana 2',
+                       deprecated='since 2026-10-06, no shutdown date yet, use nb21'),
     'flash-lite': _gemini3('gemini-3.1-flash-lite-image', 'Nano Banana 2 Lite'),
     # Pro accepts --image-size but not the panoramic ratios (verified against the API).
     'pro': _gemini3('gemini-3-pro-image', 'Nano Banana Pro - higher quality',
@@ -235,6 +241,9 @@ def generate_image(
     # Create output directory
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
+
+    if spec.deprecated:
+        print(f"Warning: model {label} is deprecated by Google ({spec.deprecated}).", file=sys.stderr)
 
     print(f"Generating {number} image(s)...")
     print(f"  Prompt: {prompt[:80]}{'...' if len(prompt) > 80 else ''}")

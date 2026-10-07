@@ -35,24 +35,23 @@ Set `GOOGLE_GENAI_USE_VERTEXAI=true` to force ADC/Vertex even when an API key is
 
 ## Architecture
 
-This is a CLI tool for generating images using Google's Gemini API and Imagen API, via the `google-genai` SDK.
+This is a CLI tool for generating images using Google's Gemini image models, via the `google-genai` SDK.
 
-- `gemini_imagegen/core.py` - Core `generate_image()` function with two code paths: `_generate_gemini()` (uses `generate_content`) and `_generate_imagen()` (uses `generate_images`)
+- `gemini_imagegen/core.py` - Core `generate_image()` function; validates against `MODEL_SPECS` and calls `_generate_gemini()` (uses `generate_content`)
 - `gemini_imagegen/cli.py` - Argument parsing and CLI entry point (`gemini-imagegen` command)
 - `gemini_imagegen/info.py` - Utility CLI (`gemini-imageinfo`) for reading PNG metadata
 - `gemini_imagegen/__init__.py` - Package exports, exposes `generate_image` and `__version__`
 
-Gemini models support text-to-image and image editing (reference images, up to 14). Imagen models support text-to-image only but offer native multi-image generation (up to 4) and configurable output size.
+All models support text-to-image and image editing (reference images, up to 14). Multiple images are produced by looping one `generate_content` call per image.
+
+Every per-model capability lives in the `MODEL_SPECS` table in `core.py` (a `ModelSpec` per alias: model ID, aspect ratios, image sizes, max reference images, temperature). `generate_image()` validates purely against that table, and the CLI derives its `--model`, `--aspect` and `--image-size` choices from it. To add a model, add one entry (use the `_gemini3()` helper if it shares that family's capabilities) and a README row. Gemini 3 models accept `--image-size` 1K/2K/4K. The panoramic ratios 1:4, 4:1, 1:8, 8:1 are accepted by `flash2`, `flash-lite` and `nb21` but rejected by the API for `flash` and `pro` (verified October 2026). The original `flash` model accepts neither size nor panoramic ratios.
 
 ## Models
 
-### Gemini
 - `flash` → `gemini-2.5-flash-image` (Nano Banana) - default, fast
-- `flash2` → `gemini-3.1-flash-image-preview` (Nano Banana Flash 3.1)
-- `flash-lite` → `gemini-3.1-flash-lite-image` (Nano Banana Flash Lite 3.1)
-- `pro` → `gemini-3-pro-image-preview` (Nano Banana Pro) - higher quality
+- `flash2` → `gemini-3.1-flash-image` (Nano Banana 2)
+- `flash-lite` → `gemini-3.1-flash-lite-image` (Nano Banana 2 Lite)
+- `pro` → `gemini-3-pro-image` (Nano Banana Pro) - higher quality
+- `nb21` → `gemini-nano-banana-2.1` (Nano Banana 2.1) - latest, GA, supports `--image-size` up to 4K
 
-### Imagen 4
-- `imagen` → `imagen-4.0-generate-001` (Standard)
-- `imagen-fast` → `imagen-4.0-fast-generate-001` (Fast)
-- `imagen-ultra` → `imagen-4.0-ultra-generate-001` (Ultra)
+Imagen 4 support was removed in October 2026 after Google discontinued those models on both Vertex AI and the Gemini API.

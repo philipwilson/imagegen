@@ -7,17 +7,24 @@ from pathlib import Path
 from . import __version__
 from .core import (
     ASPECT_RATIOS,
-    MODELS,
+    EXTREME_ASPECT_RATIOS,
+    IMAGE_SIZES,
+    MODEL_SPECS,
     OUTPUT_FORMATS,
-    PERSON_GENERATION_OPTIONS,
     generate_image,
+    models_supporting,
 )
 
 
+def _model_help() -> str:
+    lines = ', '.join(f"{alias} ({spec.description})" for alias, spec in MODEL_SPECS.items())
+    return f"Model: {lines}. Default: flash"
+
+
 def main():
-    model_choices = list(MODELS.keys())
+    model_choices = list(MODEL_SPECS)
     parser = argparse.ArgumentParser(
-        description='Generate images using Gemini or Imagen models',
+        description='Generate images using Gemini (Nano Banana) image models',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -29,8 +36,8 @@ Examples:
   %(prog)s -n 4 "Generate four variations"
   %(prog)s -t 1.5 "More creative output"
   %(prog)s --format webp "Save as WebP"
-  %(prog)s --model imagen "A robot on a skateboard"
-  %(prog)s --model imagen-ultra --image-size 2K "High-res landscape"
+  %(prog)s --model nb21 --image-size 4K "Ultra high-res poster"
+  %(prog)s --model nb21 --aspect 8:1 --image-size 2K "Panoramic skyline banner"
         """
     )
     parser.add_argument(
@@ -53,30 +60,34 @@ Examples:
         type=Path,
         action='append',
         dest='images',
-        help='Reference image(s) for editing (Gemini only, max 14)'
+        help='Reference image(s) for editing (max 14)'
     )
     parser.add_argument(
         '--model', '-m',
         choices=model_choices,
         default='flash',
-        help='Model: flash, flash2, flash-lite, pro (Gemini) or imagen, imagen-fast, imagen-ultra (Imagen). Default: flash'
+        help=_model_help()
     )
     parser.add_argument(
         '--aspect', '-a',
         choices=ASPECT_RATIOS,
         default='1:1',
-        help='Aspect ratio. Imagen supports: 1:1, 3:4, 4:3, 9:16, 16:9. Default: 1:1'
+        help=(
+            'Aspect ratio. Default: 1:1. Panoramic ratios '
+            f"({', '.join(EXTREME_ASPECT_RATIOS)}) are supported by: "
+            f"{', '.join(models_supporting(lambda s: EXTREME_ASPECT_RATIOS[0] in s.aspect_ratios))}"
+        )
     )
     parser.add_argument(
         '--number', '-n',
         type=int,
         default=1,
-        help='Number of images to generate (Imagen max: 4). Default: 1'
+        help='Number of images to generate. Default: 1'
     )
     parser.add_argument(
         '--temperature', '-t',
         type=float,
-        help='Generation temperature 0.0-2.0 (Gemini only)'
+        help='Generation temperature 0.0-2.0'
     )
     parser.add_argument(
         '--format',
@@ -90,14 +101,13 @@ Examples:
         help='Output directory. Default: output'
     )
     parser.add_argument(
-        '--person-generation',
-        choices=PERSON_GENERATION_OPTIONS,
-        help='Person generation policy (Imagen only): dont_allow, allow_adult, allow_all'
-    )
-    parser.add_argument(
         '--image-size',
-        choices=['1K', '2K'],
-        help='Output image size (Imagen only): 1K or 2K'
+        choices=IMAGE_SIZES,
+        help=(
+            f"Output image size. 4K is supported by: "
+            f"{', '.join(models_supporting(lambda s: '4K' in s.image_sizes))}; "
+            f"not supported by: {', '.join(models_supporting(lambda s: not s.image_sizes))}"
+        )
     )
 
     args = parser.parse_args()
@@ -126,7 +136,6 @@ Examples:
             number=args.number,
             temperature=args.temperature,
             output_format=args.format,
-            person_generation=args.person_generation,
             image_size=args.image_size,
         )
 

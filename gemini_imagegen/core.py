@@ -41,6 +41,9 @@ class ModelSpec:
     max_reference_images: int = MAX_REFERENCE_IMAGES   # 0: reference images not accepted
     supports_temperature: bool = True
     deprecated: str | None = None         # Google deprecation note; shown in help and warned at runtime
+    # Modalities requested per generate_content call. TEXT lets a model explain
+    # a refusal, but some models misbehave when it is requested.
+    response_modalities: tuple[str, ...] = ('TEXT', 'IMAGE')
 
 
 def _gemini3(
@@ -48,6 +51,7 @@ def _gemini3(
     description: str,
     aspect_ratios: tuple[str, ...] = GEMINI3_ASPECT_RATIOS,
     deprecated: str | None = None,
+    response_modalities: tuple[str, ...] = ('TEXT', 'IMAGE'),
 ) -> ModelSpec:
     """Shared capabilities of the Gemini 3 image family."""
     return ModelSpec(
@@ -56,6 +60,7 @@ def _gemini3(
         aspect_ratios=aspect_ratios,
         image_sizes=('1K', '2K', '4K'),
         deprecated=deprecated,
+        response_modalities=response_modalities,
     )
 
 
@@ -73,7 +78,11 @@ MODEL_SPECS: dict[str, ModelSpec] = {
     # Pro accepts --image-size but not the panoramic ratios (verified against the API).
     'pro': _gemini3('gemini-3-pro-image', 'Nano Banana Pro - higher quality',
                     aspect_ratios=GEMINI_ASPECT_RATIOS),
-    'nb21': _gemini3('gemini-nano-banana-2.1', 'Nano Banana 2.1 - latest'),
+    # nb21 returns every image twice (same pixels, re-encoded) when TEXT is
+    # also requested, so -n 1 would save two files. Requesting IMAGE alone
+    # yields exactly one part (verified October 2026).
+    'nb21': _gemini3('gemini-nano-banana-2.1', 'Nano Banana 2.1 - latest',
+                     response_modalities=('IMAGE',)),
 }
 
 DEFAULT_MODEL = 'nb21'
@@ -258,7 +267,7 @@ def generate_image(
     saved_files = _generate_gemini(
         client, model_id, prompt, number, aspect_ratio,
         temperature, output_format, images, image_size,
-        output_path, timestamp,
+        output_path, timestamp, spec.response_modalities,
     )
 
     if not saved_files:
@@ -279,6 +288,7 @@ def _generate_gemini(
     image_size: str | None,
     output_path: Path,
     timestamp: str,
+    response_modalities: tuple[str, ...] = ('TEXT', 'IMAGE'),
 ) -> list[Path]:
     """Generate images using Gemini models."""
     # Build contents list with prompt and optional reference images
@@ -295,7 +305,7 @@ def _generate_gemini(
     if image_size:
         image_config.image_size = image_size
     gen_config = types.GenerateContentConfig(
-        response_modalities=['TEXT', 'IMAGE'],
+        response_modalities=list(response_modalities),
         image_config=image_config,
     )
     if temperature is not None:

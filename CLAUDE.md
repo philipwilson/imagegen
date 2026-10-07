@@ -45,6 +45,7 @@ This is a CLI tool for generating images using Google's Gemini image models, via
 All models support text-to-image and image editing (reference images, up to 14). Multiple images are produced by looping one `generate_content` call per image.
 
 Every per-model capability lives in the `MODEL_SPECS` table in `core.py` (a `ModelSpec` per alias: model ID, aspect ratios, image sizes, max reference images, temperature). `generate_image()` validates purely against that table, and the CLI derives its `--model`, `--aspect` and `--image-size` choices from it. To add a model, add one entry (use the `_gemini3()` helper if it shares that family's capabilities) and a README row. Gemini 3 models accept `--image-size` 1K/2K/4K. The panoramic ratios 1:4, 4:1, 1:8, 8:1 are accepted by `flash2`, `flash-lite` and `nb21` but rejected by the API for `flash` and `pro` (verified October 2026). The original `flash` model accepts neither size nor panoramic ratios.
+`ModelSpec.response_modalities` controls what each `generate_content` call requests; `nb21` requests `IMAGE` only because with `TEXT` it returns every image twice (same pixels, re-encoded; verified October 2026).
 
 ## Models
 

@@ -70,6 +70,8 @@ MODEL_SPECS: dict[str, ModelSpec] = {
     'nb21': _gemini3('gemini-nano-banana-2.1', 'Nano Banana 2.1 - latest'),
 }
 
+DEFAULT_MODEL = 'nb21'
+
 # Alias -> model ID, kept for callers that only need the mapping.
 MODELS = {alias: spec.model_id for alias, spec in MODEL_SPECS.items()}
 
@@ -160,7 +162,7 @@ def _create_client() -> genai.Client:
 
 def generate_image(
     prompt: str,
-    model: str = 'flash',
+    model: str = DEFAULT_MODEL,
     aspect_ratio: str = '1:1',
     output_dir: str = 'output',
     images: list[Path] | None = None,
@@ -174,7 +176,7 @@ def generate_image(
 
     Args:
         prompt: Text description of the image to generate
-        model: Model alias, a key of MODEL_SPECS (e.g., 'flash', 'nb21')
+        model: Model alias, a key of MODEL_SPECS (default: 'nb21')
         aspect_ratio: Image aspect ratio (e.g., '1:1', '16:9'); allowed values
             depend on the model, see MODEL_SPECS[model].aspect_ratios
         output_dir: Directory to save generated images

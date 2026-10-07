@@ -48,10 +48,12 @@ Every per-model capability lives in the `MODEL_SPECS` table in `core.py` (a `Mod
 
 ## Models
 
-- `flash` → `gemini-2.5-flash-image` (Nano Banana) - default, fast
+- `flash` → `gemini-2.5-flash-image` (Nano Banana) - original model; Google shutdown date March 15, 2027
 - `flash2` → `gemini-3.1-flash-image` (Nano Banana 2)
 - `flash-lite` → `gemini-3.1-flash-lite-image` (Nano Banana 2 Lite)
 - `pro` → `gemini-3-pro-image` (Nano Banana Pro) - higher quality
-- `nb21` → `gemini-nano-banana-2.1` (Nano Banana 2.1) - latest, GA, supports `--image-size` up to 4K
+- `nb21` → `gemini-nano-banana-2.1` (Nano Banana 2.1) - **default**, latest, GA, supports `--image-size` up to 4K
+
+The default is `DEFAULT_MODEL` in `core.py`; the CLI and `generate_image()` both read it.
 
 Imagen 4 support was removed in October 2026 after Google discontinued those models on both Vertex AI and the Gemini API.

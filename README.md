@@ -45,6 +45,9 @@ To use ADC even when an API key is set, set `GOOGLE_GENAI_USE_VERTEXAI=true`.
 # Basic text-to-image
 gemini-imagegen "A cat wearing a top hat"
 
+# Use the original Nano Banana model
+gemini-imagegen --model flash "A cat wearing a top hat"
+
 # Use Nano Banana Pro for higher quality
 gemini-imagegen --model pro "A serene Japanese garden"
 
@@ -82,11 +85,11 @@ All models support text-to-image and image editing with reference images.
 
 | Flag | Model ID | Description |
 |------|----------|-------------|
-| `--model flash` | `gemini-2.5-flash-image` | Nano Banana - fast, efficient (default) |
+| `--model flash` | `gemini-2.5-flash-image` | Nano Banana - original model, scheduled for shutdown by Google on March 15, 2027 |
 | `--model flash2` | `gemini-3.1-flash-image` | Nano Banana 2 |
 | `--model flash-lite` | `gemini-3.1-flash-lite-image` | Nano Banana 2 Lite |
 | `--model pro` | `gemini-3-pro-image` | Nano Banana Pro - higher quality |
-| `--model nb21` | `gemini-nano-banana-2.1` | Nano Banana 2.1 - latest, flash-speed with improved quality, text rendering and up to 4K output |
+| `--model nb21` | `gemini-nano-banana-2.1` | Nano Banana 2.1 - latest, flash-speed with improved quality, text rendering and up to 4K output (default) |
 
 Imagen 4 support was removed in October 2026: Google discontinued the Imagen 4
 models on Vertex AI (June 30, 2026) and the Gemini API (August 17, 2026) and

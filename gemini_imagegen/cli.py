@@ -7,6 +7,7 @@ from pathlib import Path
 from . import __version__
 from .core import (
     ASPECT_RATIOS,
+    DEFAULT_MODEL,
     EXTREME_ASPECT_RATIOS,
     IMAGE_SIZES,
     MODEL_SPECS,
@@ -18,7 +19,7 @@ from .core import (
 
 def _model_help() -> str:
     lines = ', '.join(f"{alias} ({spec.description})" for alias, spec in MODEL_SPECS.items())
-    return f"Model: {lines}. Default: flash"
+    return f"Model: {lines}. Default: {DEFAULT_MODEL}"
 
 
 def main():
@@ -65,7 +66,7 @@ Examples:
     parser.add_argument(
         '--model', '-m',
         choices=model_choices,
-        default='flash',
+        default=DEFAULT_MODEL,
         help=_model_help()
     )
     parser.add_argument(
